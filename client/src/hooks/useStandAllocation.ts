@@ -125,13 +125,15 @@ export function useStandAllocation() {
       const endOrig = new Date(draggedFlight.scheduledDeparture).getTime();
       const durationMs = Math.max(20 * 60 * 1000, endOrig - startOrig);
 
-      const targetDate = new Date(selectedDate);
-      const targetHours = Math.floor(timeOffsetMinutes / 60);
-      const targetMins = timeOffsetMinutes % 60;
-      targetDate.setHours(targetHours, targetMins, 0, 0);
+      const targetHours = String(Math.floor(timeOffsetMinutes / 60)).padStart(2, '0');
+      const targetMins = String(timeOffsetMinutes % 60).padStart(2, '0');
+      newArrivalIso = `${selectedDate}T${targetHours}:${targetMins}:00.000Z`;
 
-      newArrivalIso = targetDate.toISOString();
-      newDepartureIso = new Date(targetDate.getTime() + durationMs).toISOString();
+      const durationMinutes = Math.max(20, Math.round(durationMs / 60000));
+      const endTotalMinutes = parseInt(targetHours, 10) * 60 + parseInt(targetMins, 10) + durationMinutes;
+      const endHours = String(Math.floor(endTotalMinutes / 60) % 24).padStart(2, '0');
+      const endMins = String(endTotalMinutes % 60).padStart(2, '0');
+      newDepartureIso = `${selectedDate}T${endHours}:${endMins}:00.000Z`;
     }
 
     // Actualización optimista inmediata en cliente para 60fps sin retardo

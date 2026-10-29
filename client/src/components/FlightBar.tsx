@@ -20,9 +20,14 @@ export const FlightBar: React.FC<FlightBarProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Calcular minutos desde medianoche
+  // Calcular minutos desde medianoche (aislado de desfasaje de zona horaria)
   const getMinutesOfDay = (isoString: string): number => {
     try {
+      if (!isoString) return 0;
+      const match = isoString.match(/T(\d{2}):(\d{2})/);
+      if (match) {
+        return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+      }
       const d = new Date(isoString);
       return d.getHours() * 60 + d.getMinutes();
     } catch {
@@ -52,9 +57,14 @@ export const FlightBar: React.FC<FlightBarProps> = ({
   const leftPx = (startMinutes - dayStartMinutes) * zoomLevel;
   const widthPx = Math.max(60, durationMinutes * zoomLevel);
 
-  // Formato horas HH:mm
+  // Formato horas HH:mm exacto (sin alteración UTC)
   const formatTime = (isoString: string): string => {
     try {
+      if (!isoString) return '--:--';
+      const match = isoString.match(/T(\d{2}):(\d{2})/);
+      if (match) {
+        return `${match[1]}:${match[2]}`;
+      }
       const d = new Date(isoString);
       return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     } catch {

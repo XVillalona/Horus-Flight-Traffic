@@ -5,7 +5,6 @@ import { TimelineHeader } from './components/TimelineHeader';
 import { StandTrack } from './components/StandTrack';
 import { ConflictWarningBanner } from './components/ConflictWarningBanner';
 import { FlightEditModal } from './components/FlightEditModal';
-import { ExcelUploadModal } from './components/ExcelUploadModal';
 import { FlightAllocation } from './types/contracts';
 import { Loader2 } from 'lucide-react';
 
@@ -35,7 +34,6 @@ export const App: React.FC = () => {
     handleSaveFlight,
     handleDeleteFlight,
     handleResetDemo,
-    handleDownloadTemplate,
     refreshData,
     syncPuj,
     isSyncing
@@ -44,7 +42,6 @@ export const App: React.FC = () => {
   // Estados de Modales
   const [editingFlight, setEditingFlight] = useState<FlightAllocation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Referencia para scroll automático hacia la hora actual en carga inicial
   const timelineScrollRef = useRef<HTMLDivElement>(null);
@@ -68,9 +65,7 @@ export const App: React.FC = () => {
 
   // Crear nuevo vuelo en blanco
   const handleOpenNewFlight = () => {
-    const now = new Date();
-    const arr = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
-    const dep = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 15, 0);
+    const flightDate = selectedDate || new Date().toISOString().slice(0, 10);
 
     const newFlightTemplate: FlightAllocation = {
       id: '',
@@ -80,8 +75,8 @@ export const App: React.FC = () => {
       airlineName: 'Iberia',
       aircraftType: 'A320',
       standId: stands[1]?.id || 'B20',
-      scheduledArrival: arr.toISOString(),
-      scheduledDeparture: dep.toISOString(),
+      scheduledArrival: `${flightDate}T12:00:00.000Z`,
+      scheduledDeparture: `${flightDate}T13:15:00.000Z`,
       status: 'SCHEDULED'
     };
 
@@ -105,10 +100,8 @@ export const App: React.FC = () => {
         conflictsCount={conflicts.length}
         lockTimeOnMove={lockTimeOnMove}
         onToggleLockTime={() => setLockTimeOnMove(!lockTimeOnMove)}
-        onOpenUpload={() => setIsUploadModalOpen(true)}
         onOpenNewFlight={handleOpenNewFlight}
         onResetDemo={handleResetDemo}
-        onDownloadTemplate={handleDownloadTemplate}
         totalFlights={flights.length}
         onSyncPuj={syncPuj}
         isSyncing={isSyncing}
@@ -189,13 +182,6 @@ export const App: React.FC = () => {
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveFlight}
         onDelete={handleDeleteFlight}
-      />
-
-      <ExcelUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onUploadSuccess={refreshData}
-        onDownloadTemplate={handleDownloadTemplate}
       />
     </div>
   );

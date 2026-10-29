@@ -1,8 +1,6 @@
 import React from 'react';
 import { 
   Plane, 
-  Upload, 
-  Download, 
   Plus, 
   RotateCcw, 
   AlertTriangle, 
@@ -26,10 +24,8 @@ interface TopNavigationProps {
   conflictsCount: number;
   lockTimeOnMove?: boolean;
   onToggleLockTime?: () => void;
-  onOpenUpload: () => void;
   onOpenNewFlight: () => void;
   onResetDemo: () => void;
-  onDownloadTemplate: () => void;
   totalFlights: number;
   onSyncPuj?: () => void;
   isSyncing?: boolean;
@@ -48,10 +44,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   conflictsCount,
   lockTimeOnMove = true,
   onToggleLockTime,
-  onOpenUpload,
   onOpenNewFlight,
   onResetDemo,
-  onDownloadTemplate,
   totalFlights,
   onSyncPuj,
   isSyncing = false
@@ -214,24 +208,6 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Nuevo Vuelo</span>
-        </button>
-
-        <button
-          onClick={onOpenUpload}
-          className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs px-3 py-1.5 rounded-lg flex items-center space-x-1 shadow transition"
-          title="Cargar archivo Excel o CSV diario/semanal"
-        >
-          <Upload className="w-3.5 h-3.5" />
-          <span>Subir Excel/CSV</span>
-        </button>
-
-        <button
-          onClick={onDownloadTemplate}
-          className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center space-x-1 transition"
-          title="Descargar plantilla Excel oficial de asignación"
-        >
-          <Download className="w-3.5 h-3.5 text-blue-400" />
-          <span>Plantilla</span>
         </button>
 
         <button

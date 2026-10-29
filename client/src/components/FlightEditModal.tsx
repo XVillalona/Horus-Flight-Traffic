@@ -58,10 +58,18 @@ export const FlightEditModal: React.FC<FlightEditModalProps> = ({
       return;
     }
 
+    const formatPayloadDate = (val: string): string => {
+      if (!val) return '';
+      if (val.length === 16) {
+        return `${val}:00.000Z`;
+      }
+      return val;
+    };
+
     onSave({
       ...formData,
-      scheduledArrival: new Date(formData.scheduledArrival).toISOString(),
-      scheduledDeparture: new Date(formData.scheduledDeparture).toISOString()
+      scheduledArrival: formatPayloadDate(formData.scheduledArrival),
+      scheduledDeparture: formatPayloadDate(formData.scheduledDeparture)
     });
     onClose();
   };
