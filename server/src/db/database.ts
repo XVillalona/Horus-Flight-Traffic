@@ -110,6 +110,16 @@ export class StandDatabase {
     this.saveToFile();
   }
 
+  public syncReplaceDates(incomingFlights: FlightAllocation[]): void {
+    if (incomingFlights.length === 0) return;
+    // Extraer las fechas que vienen en este lote sincronizado (ej. Jueves 29, Viernes 30...)
+    const syncDates = new Set(incomingFlights.map(f => f.scheduledArrival.slice(0, 10)));
+    // Preservar vuelos de fechas históricas que no vienen en el lote (ej. Miércoles 28, Martes 27...)
+    const preserved = this.state.flights.filter(f => !syncDates.has(f.scheduledArrival.slice(0, 10)));
+    this.state.flights = [...preserved, ...incomingFlights];
+    this.saveToFile();
+  }
+
   public bulkUpsertFlights(incomingFlights: FlightAllocation[]): { added: number; updated: number } {
     let added = 0;
     let updated = 0;

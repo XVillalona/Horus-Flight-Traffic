@@ -179,9 +179,9 @@ export class RedashService {
         });
       }
 
-      // 3. Persistir en la base de datos
+      // 3. Persistir en la base de datos preservando días históricos (ayer, hoy...)
       if (mode === 'replace') {
-        this.db.bulkReplaceFlights(mappedFlights);
+        this.db.syncReplaceDates(mappedFlights);
       } else {
         this.db.bulkUpsertFlights(mappedFlights);
       }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Stand, FlightAllocation, ConflictRecord } from '../types/contracts';
 
 export const getLocalDateString = (d: Date = new Date()): string => {
@@ -240,15 +240,21 @@ export function useStandAllocation() {
     window.open('/api/upload/template', '_blank');
   };
 
-  // Fechas disponibles detectadas en la lista de vuelos
+  // Fechas disponibles detectadas en la lista de vuelos (incluyendo siempre el día de hoy)
   const availableDates = useMemo(() => {
     const map = new Map<string, number>();
+
+    // Siempre garantizar que la fecha de hoy local esté presente
+    const todayKey = getLocalDateString();
+    map.set(todayKey, 0);
+
     flights.forEach((f) => {
       const d = f.scheduledArrival ? f.scheduledArrival.slice(0, 10) : '';
       if (d && !isNaN(Date.parse(d))) {
         map.set(d, (map.get(d) || 0) + 1);
       }
     });
+
     return Array.from(map.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([key, count]) => {
@@ -265,12 +271,19 @@ export function useStandAllocation() {
       });
   }, [flights]);
 
-  // Si hay fechas disponibles y selectedDate no está entre ellas, seleccionar la primera
+  // Inicialización de fecha por defecto en carga inicial (priorizando hoy)
+  const hasInitializedDateRef = useRef(false);
   useEffect(() => {
-    if (availableDates.length > 0 && !availableDates.some((d) => d.key === selectedDate)) {
-      setSelectedDate(availableDates[0].key);
+    if (!hasInitializedDateRef.current && availableDates.length > 0) {
+      const today = getLocalDateString();
+      if (availableDates.some((d) => d.key === today)) {
+        setSelectedDate(today);
+      } else {
+        setSelectedDate(availableDates[0].key);
+      }
+      hasInitializedDateRef.current = true;
     }
-  }, [availableDates, selectedDate]);
+  }, [availableDates]);
 
   // Filtrado de Stands
   const filteredStands = useMemo(() => {
