@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FlightAllocation } from '../types/contracts';
 import { AlertCircle, Clock } from 'lucide-react';
 
@@ -9,6 +9,9 @@ interface FlightBarProps {
   onSelect: (flight: FlightAllocation) => void;
   onDragStart: (e: React.DragEvent, flight: FlightAllocation) => void;
   onResizeTime?: (flightId: string, edge: 'start' | 'end', deltaMinutes: number) => void;
+  onHover?: (flight: FlightAllocation, x: number, y: number) => void;
+  onHoverMove?: (x: number, y: number) => void;
+  onHoverLeave?: () => void;
 }
 
 export const FlightBar: React.FC<FlightBarProps> = ({
@@ -16,10 +19,11 @@ export const FlightBar: React.FC<FlightBarProps> = ({
   zoomLevel,
   dayStartMinutes,
   onSelect,
-  onDragStart
+  onDragStart,
+  onHover,
+  onHoverMove,
+  onHoverLeave
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   // Calcular minutos desde medianoche (aislado de desfasaje de zona horaria)
   const getMinutesOfDay = (isoString: string): number => {
     try {
@@ -49,9 +53,15 @@ export const FlightBar: React.FC<FlightBarProps> = ({
   const durationStr = durationHours > 0 ? (durationMins > 0 ? `${durationHours}h ${durationMins}m` : `${durationHours}h`) : `${durationMins}m`;
   const isTightTurn = durationMinutes <= 50;
 
+  // Validación estricta: Los tiempos operativos (on block / barra de progreso) SOLO corren si el vuelo es de HOY
   const now = new Date();
+  const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const utcToday = now.toISOString().slice(0, 10);
+  const flightDate = flight.scheduledArrival ? flight.scheduledArrival.slice(0, 10) : '';
+  const isToday = flightDate === localToday || flightDate === utcToday;
+
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const isCurrentlyOnBlock = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+  const isCurrentlyOnBlock = isToday && (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
   const progressPct = isCurrentlyOnBlock ? Math.min(100, Math.max(0, Math.round(((currentMinutes - startMinutes) / durationMinutes) * 100))) : 0;
 
   const leftPx = (startMinutes - dayStartMinutes) * zoomLevel;
@@ -89,13 +99,13 @@ export const FlightBar: React.FC<FlightBarProps> = ({
     }
     if (isArajet) {
       return {
-        bg: 'from-indigo-950/90 to-blue-900/80 border-indigo-500/80 shadow-indigo-500/20',
-        stripe: 'bg-indigo-400',
-        badge: 'bg-indigo-600 text-white font-bold border border-indigo-400',
-        text: 'text-indigo-100'
+        bg: 'from-purple-950/95 via-fuchsia-950/90 to-indigo-950/95 border-2 border-fuchsia-400 shadow-[0_0_12px_rgba(217,70,239,0.35)]',
+        stripe: 'bg-gradient-to-r from-fuchsia-400 via-pink-400 to-amber-300 shadow-[0_0_8px_rgba(232,121,249,0.7)]',
+        badge: 'bg-fuchsia-600 text-white font-black border border-fuchsia-300 shadow-sm',
+        text: 'text-fuchsia-100'
       };
     }
-    if (flight.status === 'ON_BLOCK') {
+    if (flight.status === 'ON_BLOCK' || isCurrentlyOnBlock) {
       return {
         bg: 'from-emerald-950/80 to-slate-800/90 border-emerald-500/70 shadow-emerald-500/10',
         stripe: 'bg-emerald-400',
@@ -131,11 +141,22 @@ export const FlightBar: React.FC<FlightBarProps> = ({
       draggable
       onDragStart={(e) => onDragStart(e, flight)}
       onClick={() => onSelect(flight)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={(e) => {
+        onHover?.(flight, e.clientX, e.clientY);
+      }}
+      onMouseMove={(e) => {
+        onHoverMove?.(e.clientX, e.clientY);
+      }}
+      onMouseLeave={() => {
+        onHoverLeave?.();
+      }}
       title={`${flight.inboundFlight}${flight.outboundFlight ? ' / ' + flight.outboundFlight : ''} (${flight.aircraftType}) - ${arrivalFormatted} a ${departureFormatted}${flight.route ? ' | Ruta: ' + flight.route : ''}`}
-      className={`absolute top-1 bottom-1 rounded-md border shadow-md cursor-grab active:cursor-grabbing select-none overflow-hidden transition-shadow flex flex-col justify-between group bg-gradient-to-r ${theme.bg} ${
-        flight.hasConflict ? 'ring-2 ring-red-500 flight-conflict-pulse z-20' : 'hover:z-20 hover:border-blue-400'
+      className={`absolute top-1 bottom-1 rounded-md border shadow-md cursor-grab active:cursor-grabbing select-none overflow-hidden transition-all flex flex-col justify-between group bg-gradient-to-r ${theme.bg} ${
+        flight.hasConflict
+          ? 'ring-2 ring-red-500 flight-conflict-pulse z-20'
+          : isArajet
+          ? 'ring-1 ring-fuchsia-400/70 hover:ring-2 hover:ring-fuchsia-300 hover:z-20 shadow-[0_0_12px_rgba(217,70,239,0.3)]'
+          : 'hover:z-20 hover:border-blue-400'
       }`}
     >
       {/* Franja superior de estado */}
@@ -159,7 +180,7 @@ export const FlightBar: React.FC<FlightBarProps> = ({
             {flight.airlineCode || 'FL'}
           </span>
           <span className="text-[10px] text-slate-300" title="Llegada">🛬</span>
-          <span className="font-bold text-xs tracking-tight truncate text-white" title="Llegada">
+          <span className={`font-bold text-xs tracking-tight truncate ${isArajet ? 'text-fuchsia-100' : 'text-white'}`} title="Llegada">
             {flight.inboundFlight}
           </span>
         </div>
@@ -190,8 +211,14 @@ export const FlightBar: React.FC<FlightBarProps> = ({
             </span>
           )}
         </span>
-        <span className={`truncate max-w-[80px] text-right font-medium ${isArajet ? 'text-indigo-300 font-bold' : 'text-slate-300'}`}>
-          {isArajet ? '737 MAX' : flight.aircraftType} {flight.registration ? `• ${flight.registration}` : ''}
+        <span
+          className={`truncate max-w-[90px] text-right ${
+            isArajet
+              ? 'text-fuchsia-200 bg-fuchsia-950/80 border border-fuchsia-500/50 px-1 rounded text-[9px] font-extrabold shadow-sm'
+              : 'text-slate-300 font-medium'
+          }`}
+        >
+          {isArajet ? '⚡ 737 MAX' : flight.aircraftType} {flight.registration ? `• ${flight.registration}` : ''}
         </span>
       </div>
 
@@ -199,34 +226,6 @@ export const FlightBar: React.FC<FlightBarProps> = ({
       {flight.hasConflict && (
         <div className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 shadow-md z-20">
           <AlertCircle className="w-3 h-3" />
-        </div>
-      )}
-
-      {/* Tooltip flotante enriquecido al pasar el mouse */}
-      {isHovered && (
-        <div className="absolute -top-20 left-0 bg-slate-950/95 backdrop-blur-md text-white text-xs p-2.5 rounded-xl shadow-2xl border border-blue-500/40 z-50 pointer-events-none min-w-[240px] whitespace-normal">
-          <div className="font-bold text-blue-400 flex items-center justify-between pb-1 border-b border-slate-800">
-            <span>🛬 {flight.inboundFlight} {flight.outboundFlight ? `➔ 🛫 ${flight.outboundFlight}` : ''}</span>
-            <span className="bg-blue-600 text-white font-mono text-[10px] px-1.5 py-0.5 rounded">{flight.standId}</span>
-          </div>
-          <div className="text-[11px] text-slate-200 mt-1 flex items-center justify-between">
-            <span>{arrivalFormatted} - {departureFormatted}</span>
-            <span className="font-mono text-amber-300">⏱️ Escala: {durationStr}</span>
-          </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
-            {flight.airlineName} • {isArajet ? 'Boeing 737 MAX' : flight.aircraftType} {flight.registration ? `(${flight.registration})` : ''}
-          </div>
-          {flight.route && (
-            <div className="text-[10px] text-sky-300 mt-0.5 font-mono">
-              ✈️ {flight.route.replace(/-/g, ' ➔ ')}
-            </div>
-          )}
-          {flight.hasConflict && (
-            <div className="text-red-400 text-[10px] font-semibold mt-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              {flight.conflictDetails?.join(', ') || 'Conflicto de solapamiento en este stand'}
-            </div>
-          )}
         </div>
       )}
     </div>

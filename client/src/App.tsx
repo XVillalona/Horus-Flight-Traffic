@@ -5,6 +5,7 @@ import { TimelineHeader } from './components/TimelineHeader';
 import { StandTrack } from './components/StandTrack';
 import { ConflictWarningBanner } from './components/ConflictWarningBanner';
 import { FlightEditModal } from './components/FlightEditModal';
+import { FlightHoverCard } from './components/FlightHoverCard';
 import { FlightAllocation } from './types/contracts';
 import { Loader2 } from 'lucide-react';
 
@@ -39,9 +40,14 @@ export const App: React.FC = () => {
     isSyncing
   } = useStandAllocation();
 
-  // Estados de Modales
+  // Estados de Modales y Tooltip Flotante
   const [editingFlight, setEditingFlight] = useState<FlightAllocation | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [hoveredFlightData, setHoveredFlightData] = useState<{
+    flight: FlightAllocation;
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Referencia para scroll automático hacia la hora actual en carga inicial
   const timelineScrollRef = useRef<HTMLDivElement>(null);
@@ -166,6 +172,9 @@ export const App: React.FC = () => {
                     onSelectFlight={handleSelectFlight}
                     onDragStartFlight={handleDragStart}
                     onDropFlightOnStand={handleDropFlightOnStand}
+                    onHoverFlight={(flight, x, y) => setHoveredFlightData({ flight, x, y })}
+                    onHoverMoveFlight={(x, y) => setHoveredFlightData((prev) => (prev ? { ...prev, x, y } : null))}
+                    onHoverLeaveFlight={() => setHoveredFlightData(null)}
                   />
                 );
               })}
@@ -183,6 +192,15 @@ export const App: React.FC = () => {
         onSave={handleSaveFlight}
         onDelete={handleDeleteFlight}
       />
+
+      {/* 5. Tarjeta Flotante Enriquecida al Pasar el Mouse (Hover Card) */}
+      {hoveredFlightData && (
+        <FlightHoverCard
+          flight={hoveredFlightData.flight}
+          x={hoveredFlightData.x}
+          y={hoveredFlightData.y}
+        />
+      )}
     </div>
   );
 };

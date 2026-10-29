@@ -43,7 +43,7 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
                 </span>
               </div>
 
-              {/* Sub-ticks de 5 minutos (00, 05, 10, 15... 55) */}
+              {/* Sub-ticks con marcas limpias a los 15, 30 y 45 minutos */}
               <div className="flex h-5 border-t border-slate-800 text-[9px] font-mono text-slate-400">
                 {fiveMinTicks.map((tick) => (
                   <div
@@ -51,11 +51,13 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
                     style={{ width: `${(hourWidth / 12)}px` }}
                     className="flex-shrink-0 border-r border-slate-800/80 flex items-center justify-center hover:bg-slate-800/50 transition-colors"
                   >
-                    {zoomLevel >= 1.5 ? (
-                      <span>{String(tick).padStart(2, '0')}</span>
-                    ) : (
-                      tick % 15 === 0 && <span>{String(tick).padStart(2, '0')}</span>
-                    )}
+                    {tick === 15 ? (
+                      <span className="font-bold text-[10px] text-slate-300">15</span>
+                    ) : tick === 30 ? (
+                      <span className="font-bold text-[10px] text-amber-400">30</span>
+                    ) : tick === 45 ? (
+                      <span className="font-bold text-[10px] text-slate-300">45</span>
+                    ) : null}
                   </div>
                 ))}
               </div>

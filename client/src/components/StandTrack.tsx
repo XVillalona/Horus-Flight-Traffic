@@ -13,6 +13,9 @@ interface StandTrackProps {
   onSelectFlight: (flight: FlightAllocation) => void;
   onDragStartFlight: (e: React.DragEvent, flight: FlightAllocation) => void;
   onDropFlightOnStand: (standId: string, timeOffsetMinutes?: number, preserveTime?: boolean) => void;
+  onHoverFlight?: (flight: FlightAllocation, x: number, y: number) => void;
+  onHoverMoveFlight?: (x: number, y: number) => void;
+  onHoverLeaveFlight?: () => void;
 }
 
 export const StandTrack: React.FC<StandTrackProps> = ({
@@ -25,7 +28,10 @@ export const StandTrack: React.FC<StandTrackProps> = ({
   lockTimeOnMove = true,
   onSelectFlight,
   onDragStartFlight,
-  onDropFlightOnStand
+  onDropFlightOnStand,
+  onHoverFlight,
+  onHoverMoveFlight,
+  onHoverLeaveFlight
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const hourWidth = zoomLevel * 60;
@@ -146,6 +152,9 @@ export const StandTrack: React.FC<StandTrackProps> = ({
             dayStartMinutes={dayStartMinutes}
             onSelect={onSelectFlight}
             onDragStart={onDragStartFlight}
+            onHover={onHoverFlight}
+            onHoverMove={onHoverMoveFlight}
+            onHoverLeave={onHoverLeaveFlight}
           />
         ))}
 

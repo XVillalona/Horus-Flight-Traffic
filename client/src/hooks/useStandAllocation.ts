@@ -303,11 +303,20 @@ export function useStandAllocation() {
     return result;
   }, [flights, selectedDate, searchQuery]);
 
-  // Posición del Scrubber Amarillo de Hora Actual
+  // Posición del Scrubber Amarillo de Hora Actual (Solo visible si selectedDate es HOY)
   const currentTimePosition = useMemo(() => {
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const utcToday = now.toISOString().slice(0, 10);
+
+    // Si el usuario está viendo mañana o días pasados, ocultar el indicador de hora actual
+    if (selectedDate && selectedDate !== localToday && selectedDate !== utcToday) {
+      return -1;
+    }
+
     const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
     return currentMinutes * zoomLevel;
-  }, [currentTime, zoomLevel]);
+  }, [currentTime, zoomLevel, selectedDate]);
 
   const currentTimeString = useMemo(() => {
     return `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}`;
