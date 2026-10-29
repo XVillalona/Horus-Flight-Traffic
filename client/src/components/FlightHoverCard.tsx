@@ -55,9 +55,8 @@ export const FlightHoverCard: React.FC<FlightHoverCardProps> = ({ flight, x, y }
 
   const now = new Date();
   const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const utcToday = now.toISOString().slice(0, 10);
   const flightDate = flight.scheduledArrival ? flight.scheduledArrival.slice(0, 10) : '';
-  const isToday = flightDate === localToday || flightDate === utcToday;
+  const isToday = flightDate === localToday;
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const isLiveOnBlock = isToday && (currentMinutes >= startMin && currentMinutes <= endMin);

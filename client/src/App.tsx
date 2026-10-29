@@ -49,19 +49,30 @@ export const App: React.FC = () => {
     y: number;
   } | null>(null);
 
-  // Referencia para scroll automático hacia la hora actual en carga inicial
+  // Referencia para scroll automático según la fecha seleccionada
   const timelineScrollRef = useRef<HTMLDivElement>(null);
   const hasAutoScrolled = useRef(false);
+  const lastSelectedDate = useRef<string>(selectedDate);
 
   useEffect(() => {
-    if (!isLoading && currentTimePosition > 0 && !hasAutoScrolled.current && timelineScrollRef.current) {
-      // Centrar el scroll horizontal alrededor de la hora actual
-      const containerWidth = timelineScrollRef.current.clientWidth;
-      const targetScroll = Math.max(0, currentTimePosition - containerWidth / 3);
-      timelineScrollRef.current.scrollLeft = targetScroll;
+    if (isLoading || !timelineScrollRef.current) return;
+
+    const dateChanged = lastSelectedDate.current !== selectedDate;
+    if (dateChanged || !hasAutoScrolled.current) {
+      if (currentTimePosition > 0) {
+        // En el día de HOY: centrar el scroll horizontal alrededor de la hora actual
+        const containerWidth = timelineScrollRef.current.clientWidth;
+        const targetScroll = Math.max(0, currentTimePosition - containerWidth / 3);
+        timelineScrollRef.current.scrollLeft = targetScroll;
+      } else {
+        // En días futuros (ej. mañana jueves) o pasados: posicionar al inicio matutino (06:00)
+        const morningOffset = Math.max(0, 6 * 60 * zoomLevel);
+        timelineScrollRef.current.scrollLeft = morningOffset;
+      }
       hasAutoScrolled.current = true;
+      lastSelectedDate.current = selectedDate;
     }
-  }, [isLoading, currentTimePosition]);
+  }, [isLoading, selectedDate, currentTimePosition, zoomLevel]);
 
   // Abrir modal de edición
   const handleSelectFlight = (flight: FlightAllocation) => {
@@ -71,7 +82,9 @@ export const App: React.FC = () => {
 
   // Crear nuevo vuelo en blanco
   const handleOpenNewFlight = () => {
-    const flightDate = selectedDate || new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const flightDate = selectedDate || localToday;
 
     const newFlightTemplate: FlightAllocation = {
       id: '',

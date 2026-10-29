@@ -783,13 +783,20 @@
       { id: 'P11', name: 'Stand P11', category: 'P-RAMP', size: 'Remota / Narrowbody', terminal: 'Plataforma P', order: 39 }
     ];
 
+    function getLocalDateStr(d = new Date()) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
     // --- ESTADO GLOBAL ---
     let state = {
       zoomLevel: 2.0, // 2px por minuto = 120px por hora
       categoryFilter: 'ALL',
       airlineFilter: 'ALL', // Filtro rápido / Spotlight de Aerolínea ('ALL' | 'Arajet' | 'Copa'...)
       searchQuery: '',
-      selectedDate: '2026-10-28', // Fecha actualmente visualizada
+      selectedDate: getLocalDateStr(), // Fecha actualmente visualizada (HOY local PUJ)
       lockTimeOnMove: true, // TRUE: al mover a otro stand, no cambia de hora a menos que se cambie explícitamente
       flights: [],
       conflicts: [],
@@ -5449,9 +5456,9 @@
         `;
       }
 
-      // Scrubber de hora actual (Solo visible si el día seleccionado es HOY)
+      // Scrubber de hora actual (Solo visible si el día seleccionado es estrictamente HOY local)
       const now = new Date();
-      const todayIso = now.toISOString().slice(0, 10);
+      const todayIso = getLocalDateStr(now);
       const isToday = state.selectedDate === todayIso;
       const currentMin = now.getHours() * 60 + now.getMinutes() + (now.getSeconds() / 60);
       const currentPos = currentMin * state.zoomLevel;
@@ -5505,7 +5512,7 @@
       }
 
       const now = new Date();
-      const todayIso = now.toISOString().slice(0, 10);
+      const todayIso = getLocalDateStr(now);
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
       container.innerHTML = filteredStands.map(stand => {
@@ -5936,7 +5943,7 @@
       const isArajet = f.airline === 'DM' || f.aircraft === '737MAX' || (f.inbound && f.inbound.startsWith('DM'));
 
       const now = new Date();
-      const todayIso = now.toISOString().slice(0, 10);
+      const todayIso = getLocalDateStr(now);
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
       const isToday = (f.flightDate || state.selectedDate) === todayIso;
       const isLiveOnBlock = isToday && (currentMinutes >= startMin && currentMinutes <= endMin);
@@ -7067,8 +7074,8 @@
       state.flights = converted;
       populateDaySelector();
 
-      // Si la fecha actual seleccionada no tiene vuelos o si hoy está disponible, cambiar
-      const todayStr = new Date().toISOString().slice(0, 10);
+      // Si la fecha actual seleccionada no tiene vuelos o si hoy local está disponible, cambiar
+      const todayStr = getLocalDateStr(new Date());
       const availableDates = Array.from(new Set(converted.map(f => f.flightDate)));
       if (availableDates.includes(todayStr)) {
         state.selectedDate = todayStr;

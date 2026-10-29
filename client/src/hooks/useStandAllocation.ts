@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Stand, FlightAllocation, ConflictRecord } from '../types/contracts';
 
+export const getLocalDateString = (d: Date = new Date()): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 export function useStandAllocation() {
   const [stands, setStands] = useState<Stand[]>([]);
   const [flights, setFlights] = useState<FlightAllocation[]>([]);
@@ -8,8 +15,8 @@ export function useStandAllocation() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtros & Visualización
-  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  // Filtros & Visualización (Inicializa con la fecha local de hoy: YYYY-MM-DD)
+  const [selectedDate, setSelectedDate] = useState<string>(() => getLocalDateString());
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [zoomLevel, setZoomLevel] = useState<number>(2.0); // 2 px por minuto = 120 px por hora
@@ -303,14 +310,12 @@ export function useStandAllocation() {
     return result;
   }, [flights, selectedDate, searchQuery]);
 
-  // Posición del Scrubber Amarillo de Hora Actual (Solo visible si selectedDate es HOY)
+  // Posición del Scrubber Amarillo de Hora Actual (Solo visible si selectedDate es HOY local)
   const currentTimePosition = useMemo(() => {
-    const now = new Date();
-    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const utcToday = now.toISOString().slice(0, 10);
+    const localToday = getLocalDateString(new Date());
 
     // Si el usuario está viendo mañana o días pasados, ocultar el indicador de hora actual
-    if (selectedDate && selectedDate !== localToday && selectedDate !== utcToday) {
+    if (!selectedDate || selectedDate !== localToday) {
       return -1;
     }
 

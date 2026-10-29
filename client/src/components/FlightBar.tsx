@@ -53,12 +53,11 @@ export const FlightBar: React.FC<FlightBarProps> = ({
   const durationStr = durationHours > 0 ? (durationMins > 0 ? `${durationHours}h ${durationMins}m` : `${durationHours}h`) : `${durationMins}m`;
   const isTightTurn = durationMinutes <= 50;
 
-  // Validación estricta: Los tiempos operativos (on block / barra de progreso) SOLO corren si el vuelo es de HOY
+  // Validación estricta: Los tiempos operativos (on block / barra de progreso) SOLO corren si el vuelo es estrictamente de HOY local
   const now = new Date();
   const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const utcToday = now.toISOString().slice(0, 10);
   const flightDate = flight.scheduledArrival ? flight.scheduledArrival.slice(0, 10) : '';
-  const isToday = flightDate === localToday || flightDate === utcToday;
+  const isToday = flightDate === localToday;
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const isCurrentlyOnBlock = isToday && (currentMinutes >= startMinutes && currentMinutes <= endMinutes);
