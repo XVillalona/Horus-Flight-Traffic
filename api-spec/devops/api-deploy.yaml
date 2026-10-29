@@ -1,0 +1,56 @@
+# Azure API Management Deployment Pipeline
+# Reference: ARA-MAN-TIC-2008 Table 28
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Automation and Apps projects (Short Term)/IT-PipelineTemplates
+      ref: refs/heads/main
+
+trigger:
+  branches:
+    include:
+      - main
+      - feature/*
+  paths:
+    include:
+      - api-spec/**
+
+pr:
+  branches:
+    include:
+      - main
+      - feature/*
+  paths:
+    include:
+      - api-spec/**
+
+stages:
+  - template: azure-resources/stages/template-azure-deploy-apim.yaml@templates
+    parameters:
+      resourceGroupDEV: Arajet-Web-EnterApp-DEV
+      resourceGroupUAT: Arajet-Web-EnterApp-DEV
+      resourceGroupPRD: Arajet-Web-EnterApp-PRD
+      apimNameDEV: arajet-apim-enterapps-dev
+      apimNameUAT: arajet-apim-enterapps-dev
+      apimNamePRD: arajet-apim-enterapps-prd
+      apiIdDEV: horus-flight-traffic-backend-api-dev
+      apiIdUAT: horus-flight-traffic-backend-api-uat
+      apiIdPRD: horus-flight-traffic-backend-api-prd
+      apiDisplayNameDEV: Horus Flight Traffic API - DEV
+      apiDisplayNameUAT: Horus Flight Traffic API - UAT
+      apiDisplayNamePRD: Horus Flight Traffic API - PRD
+      apiPathDEV: horus-flight-traffic-dev
+      apiPathUAT: horus-flight-traffic-uat
+      apiPathPRD: horus-flight-traffic
+      openApiJsonPath: api-spec/openapi.json
+      versionSetIdDEV: horus-flight-traffic-api-dev
+      versionSetNameDEV: Horus Flight Traffic API - DEV
+      versionSetIdUAT: horus-flight-traffic-api-uat
+      versionSetNameUAT: Horus Flight Traffic API - UAT
+      versionSetIdPRD: horus-flight-traffic-api-prd
+      versionSetNamePRD: Horus Flight Traffic API - PRD
+      webServiceUrlDEV: 'http://horus-flight-traffic-back-dev.enterapparajet.com'
+      webServiceUrlUAT: 'http://horus-flight-traffic-back-uat.enterapparajet.com'
+      webServiceUrlPRD: 'http://horus-flight-traffic-back-prd.enterapparajet.com'

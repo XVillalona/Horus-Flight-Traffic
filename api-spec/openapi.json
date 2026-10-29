@@ -1,0 +1,245 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Arajet Horus Stand Allocation API",
+    "description": "Enterprise API for Airport Stand Allocation and Flight Traffic Monitoring. Compliant with ARA-MAN-TIC-2008 standard.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Arajet Operations & IT Enterprise Applications",
+      "url": "https://dominicanwings.sharepoint.com/sites/EnterpriseApps"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://arajet-apim-enterapps-dev.azure-api.net/horus-stand-allocation-dev",
+      "description": "Arajet Azure API Management - DEV"
+    },
+    {
+      "url": "https://arajet-apim-enterapps-prd.azure-api.net/horus-stand-allocation",
+      "description": "Arajet Azure API Management - PRD"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Service Health Check",
+        "description": "Returns service health and operational status for Kubernetes / App Service probes.",
+        "responses": {
+          "200": {
+            "description": "Service is healthy and ready to receive traffic.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "online" },
+                    "app": { "type": "string", "example": "Horus Stand Allocation Engine" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stands": {
+      "get": {
+        "summary": "List Airport Stands",
+        "description": "Retrieves the catalog of airport stands and gates with their operational statuses.",
+        "responses": {
+          "200": {
+            "description": "List of available airport stands.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Stand" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flights": {
+      "get": {
+        "summary": "List Flight Allocations",
+        "description": "Retrieves active flight allocations, scheduled timings, assigned stands, and conflict status.",
+        "parameters": [
+          {
+            "name": "terminal",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "example": "B" },
+            "description": "Optional terminal filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of flight allocations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FlightAllocation" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Flight Allocation",
+        "description": "Registers a new flight allocation into the timeline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FlightAllocationInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Flight allocation created successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FlightAllocation" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flights/{id}/stand": {
+      "put": {
+        "summary": "Update Flight Stand Assignment",
+        "description": "Reassigns a flight to a specific stand and re-evaluates schedule conflicts.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "standId": { "type": "string", "example": "B20" }
+                },
+                "required": ["standId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stand reassigned successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FlightAllocation" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/redash": {
+      "post": {
+        "summary": "Trigger Redash Synchronization",
+        "description": "Executes synchronization with the live airport operations dataset.",
+        "responses": {
+          "200": {
+            "description": "Sync outcome and ingested counts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "terminalBCount": { "type": "integer" },
+                    "conflictsCount": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/status": {
+      "get": {
+        "summary": "Get Sync Status",
+        "description": "Returns health, last run timestamp, and sync operational metrics.",
+        "responses": {
+          "200": {
+            "description": "Current sync status metrics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSyncing": { "type": "boolean" },
+                    "lastSyncStatus": { "type": "string" },
+                    "lastSyncTimestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Stand": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "B20" },
+          "terminal": { "type": "string", "example": "Terminal B" },
+          "isActive": { "type": "boolean", "example": true }
+        }
+      },
+      "FlightAllocation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "F101" },
+          "inboundFlight": { "type": "string", "example": "DM6207" },
+          "outboundFlight": { "type": "string", "example": "DM1732" },
+          "airlineCode": { "type": "string", "example": "DM" },
+          "airlineName": { "type": "string", "example": "Arajet" },
+          "aircraftType": { "type": "string", "example": "737MAX" },
+          "standId": { "type": "string", "example": "B26" },
+          "scheduledArrival": { "type": "string", "format": "date-time" },
+          "scheduledDeparture": { "type": "string", "format": "date-time" },
+          "hasConflict": { "type": "boolean", "example": false }
+        }
+      },
+      "FlightAllocationInput": {
+        "type": "object",
+        "required": ["inboundFlight", "standId", "scheduledArrival", "scheduledDeparture"],
+        "properties": {
+          "inboundFlight": { "type": "string" },
+          "outboundFlight": { "type": "string" },
+          "airlineCode": { "type": "string" },
+          "airlineName": { "type": "string" },
+          "aircraftType": { "type": "string" },
+          "standId": { "type": "string" },
+          "scheduledArrival": { "type": "string", "format": "date-time" },
+          "scheduledDeparture": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

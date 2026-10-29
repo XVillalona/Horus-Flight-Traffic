@@ -1,0 +1,36 @@
+# Azure DevOps CI/CD Pipeline
+# Reference: ARA-MAN-TIC-2008 §23.1, Table 30
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Automation and Apps projects (Short Term)/IT-PipelineTemplates
+      ref: refs/heads/main
+    - repository: IT-ChartsHelm
+      type: git
+      name: Automation and Apps projects (Short Term)/IT-ChartsHelm
+      ref: refs/heads/feature/refactor-generic-chart
+
+trigger:
+  branches:
+    include:
+      - release/*
+      - hotfix/*
+      - main
+
+pr:
+  branches:
+    include:
+      - feature/*
+      - bugfix/*
+      - release/*
+      - hotfix/*
+
+stages:
+  - template: webapp/stages/template-node-webapp.yaml@templates
+    parameters:
+      ENVIRONMENT_HOST_DEV: horus.arajet.dev
+      ENVIRONMENT_HOST_PRD: horus.arajet.com
+      APPLICATION_PORT: 4000
+      DISABLE_PROBES: false

@@ -1,0 +1,25 @@
+{
+  "name": "horus-airport-stand-allocation",
+  "version": "1.0.0",
+  "description": "Sistema de asignación visual de stands de aeropuerto y control de tráfico de vuelos",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "build": "npm run build:client && npm run build:server",
+    "start:server": "cd server && npm start",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev": "npm run dev:server"
+  },
+  "keywords": [
+    "airport",
+    "stand-allocation",
+    "flight-traffic",
+    "gantt",
+    "timeline",
+    "horus"
+  ],
+  "author": "Horus Multi-Agent Team (ODIN Lead)",
+  "license": "MIT"
+}
