@@ -18,13 +18,17 @@ where node >nul 2>nul || (
 )
 
 echo [OK] Entorno Node.js detectado.
-echo.
 
-REM 2. Abrir visualizador en el navegador
-echo [OK] Abriendo visualizador en http://localhost:4000 ...
-start "" "http://localhost:4000"
+REM 2. Si server\dist\server.js no existe, compilarlo
+if not exist "server\dist\server.js" (
+    echo [BUILD] Compilando servidor TypeScript...
+    call npm run build:server >nul 2>nul
+)
 
-REM 3. Iniciar el servidor local
+REM 3. Lanzar apertura del navegador con retardo para asegurar que el puerto este listo
+start /b cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:4000"
+
+REM 4. Iniciar el servidor local
 echo ===============================================================================
 echo  Iniciando servidor local en http://localhost:4000
 echo  Sincronizacion en tiempo real con Redash PUJ activa (Terminal B)
@@ -32,5 +36,9 @@ echo  (Para detener el sistema, presiona Ctrl + C en esta ventana)
 echo ===============================================================================
 echo.
 
-node server\dist\server.js
+if exist "server\dist\server.js" (
+    node server\dist\server.js
+) else (
+    npx tsx server/src/server.ts
+)
 pause
